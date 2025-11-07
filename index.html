@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EA Bot Analyzer | Hakittools</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Hakittools EA Bot Analyzer</h1>
+      <p>Simulated EA scan for client verification and reporting</p>
+    </header>
+
+    <section class="upload-section">
+      <input type="file" id="eaFile" accept=".ex4,.ex5" />
+      <button id="scanBtn">Scan EA File</button>
+    </section>
+
+    <section id="console" class="console hidden">
+      <h2>Scan Console</h2>
+      <div id="logOutput" class="log"></div>
+    </section>
+
+    <section id="codePreview" class="code-preview hidden">
+      <h2>Simulated EA Code</h2>
+      <pre><code id="codeBlock"></code></pre>
+    </section>
+
+    <section id="dashboard" class="dashboard hidden">
+      <h2>Detected Issues</h2>
+      <ul id="issueList"></ul>
+      <button id="downloadBtn">Download Report</button>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
