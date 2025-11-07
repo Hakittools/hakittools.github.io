@@ -1,0 +1,192 @@
+import os
+import struct
+import binascii
+import tkinter as tk
+from tkinter import ttk, scrolledtext, filedialog
+import re
+import json
+from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG,
+                   format='%(asctime)s - %(levelname)s - %(message)s')
+
+class MT4Analyzer:
+    def __init__(self):
+        self.known_patterns = {
+            # Common patterns
+            b'indicator': 'Custom Indicator',
+            b'expert': 'Expert Advisor',
+            b'copyright': 'Copyright Information',
+            b'property': 'Indicator Property',
+            b'extern': 'External Variable',
+            b'buffer': 'Indicator Buffer',
+            
+            # MQL4 specific patterns
+            b'OrderSend': 'MQL4 Trading Function',
+            b'iCustom': 'MQL4 Custom Indicator',
+            b'iMA': 'MQL4 Moving Average',
+            b'iRSI': 'MQL4 RSI',
+            b'iATR': 'MQL4 ATR',
+            
+            # MQL5 specific patterns
+            b'CTrade': 'MQL5 Trading Class',
+            b'CCustomInd': 'MQL5 Custom Indicator',
+            b'CiMA': 'MQL5 Moving Average',
+            b'CiRSI': 'MQL5 RSI',
+            b'CiATR': 'MQL5 ATR'
+        }
+
+    def analyze_file(self, filepath):
+        """Analyze an EX4 file with detailed error reporting"""
+        try:
+            logging.info(f"Starting analysis of {filepath}")
+            
+            with open(filepath, 'rb') as f:
+                data = f.read()
+                
+            logging.info(f"Successfully read {len(data)} bytes from file")
+            
+            # Basic file validation
+            if len(data) < 64:
+                raise ValueError("File too small to be a valid EX4 file")
+                
+            # Check for MZ header (common in EX4 files)
+            if not data.startswith(b'MZ'):
+                logging.warning("File does not start with MZ header")
+            
+            analysis = {
+                'metadata': self.extract_metadata(data),
+                'patterns': self.find_patterns(data),
+                'strings': self.extract_strings(data),
+                'functions': self.identify_functions(data)
+            }
+            
+            logging.info("Analysis completed successfully")
+            return analysis
+            
+        except Exception as e:
+            logging.error(f"Error during analysis: {str(e)}", exc_info=True)
+            return {
+                'error': str(e),
+                'metadata': {'type': 'Unknown', 'version': 'Unknown'},
+                'patterns': [],
+                'strings': [],
+            return {'type': 'Unknown', 'version': 'Unknown', 'error': str(e)}
+
+    def find_patterns(self, data):
+        """Find known patterns in the binary data"""
+        try:
+            patterns = []
+            for pattern, description in self.known_patterns.items():
+                if pattern in data:
+                    patterns.append({
+                        'type': description,
+                        'count': data.count(pattern)
+                    })
+            
+            logging.info(f"Found {len(patterns)} patterns")
+            return patterns
+            
+        except Exception as e:
+            logging.error(f"Error finding patterns: {str(e)}", exc_info=True)
+            return []
+
+    def extract_strings(self, data):
+        """Extract readable strings from the binary"""
+        try:
+            strings = []
+            current = ''
+            for byte in data:
+                if 32 <= byte <= 126:  # printable ASCII
+                    current += chr(byte)
+                elif current:
+                    if len(current) > 3:  # minimum length
+                        strings.append(current)
+                    current = ''
+                    
+            logging.info(f"Extracted {len(strings)} strings")
+            return strings
+            
+        except Exception as e:
+            logging.error(f"Error extracting strings: {str(e)}", exc_info=True)
+            return []
+
+    def identify_functions(self, data):
+        """Identify potential functions in the binary"""
+        try:
+            functions = []
+            
+            # Common function markers in MT4
+            markers = [
+                b'OnInit',
+                b'OnDeinit',
+                b'OnStart',
+                b'OnTick',
+                b'OnCalculate'
+            ]
+            
+            for marker in markers:
+                if marker in data:
+                    functions.append(marker.decode('ascii', errors='ignore'))
+                    
+            logging.info(f"Identified {len(functions)} functions")
+            return functions
+            
+        except Exception as e:
+            logging.error(f"Error identifying functions: {str(e)}", exc_info=True)
+            return []
+
+    def generate_pseudocode(self, analysis, language='MQL4'):
+        """Generate pseudocode in the specified language format"""
+        try:
+            generators = {
+                'MQL4': self.generate_mql4_code,
+                'MQL5': self.generate_mql5_code,
+                'Python': self.generate_python_code,
+                'C': self.generate_c_code,
+                'R': self.generate_r_code,
+                'Text': self.generate_text_description
+            }
+            
+            if language in generators:
+                return generators[language](analysis)
+            else:
+                return f"// Error: Unsupported language {language}"
+                
+        except Exception as e:
+            logging.error(f"Error generating {language} pseudocode: {str(e)}", exc_info=True)
+            return f"// Error generating {language} pseudocode: {str(e)}"
+
+    def generate_mql4_code(self, analysis):
+        """Generate MQL4 pseudocode"""
+        code_lines = []
+        
+        # Add header
+        code_lines.append("//+------------------------------------------------------------------+")
+        code_lines.append("//|                    Decompiled MQL4 Program                       |")
+        code_lines.append("//|                    Type: " + analysis['metadata']['type'].ljust(41) + "|")
+        code_lines.append("//|                    Version: " + str(analysis['metadata']['version']).ljust(39) + "|")
+        code_lines.append("//+------------------------------------------------------------------+")
+        code_lines.append("")
+        
+        # Properties
+        if analysis['metadata']['type'] == 'Indicator':
+            code_lines.append("#property indicator_separate_window")
+            code_lines.append("#property indicator_buffers 1")
+            code_lines.append("")
+        
+        # External parameters
+        externals_found = False
+        for string in analysis['strings']:
+            if 'period' in string.lower() or 'shift' in string.lower() or 'price' in string.lower():
+                if not externals_found:
+                    code_lines.append("// Input Parameters")
+                    externals_found = True
+                code_lines.append(f"extern int {string} = 0;")
+        
+        if externals_found:
+            code_lines.append("")
+        
+        # Global variables
