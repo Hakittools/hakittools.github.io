@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HakitTools EA Analyzer</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>HakitTools EA Analyzer</h1>
+      <p>Upload your EA file and simulate a full analysis report</p>
+    </header>
+
+    <section class="upload-section">
+      <input type="file" id="eaFile" accept=".ex4,.ex5" />
+      <button id="scanBtn">Scan EA</button>
+    </section>
+
+    <section id="chartSection" class="hidden">
+      <h2>Code Line Trend</h2>
+      <canvas id="lineChart" width="800" height="200"></canvas>
+    </section>
+
+    <section id="totals" class="hidden">
+      <h2>Coverage Summary</h2>
+      <div class="circles">
+        <div class="circle"><span>100</span><p>LINES</p></div>
+        <div class="circle"><span>100</span><p>STATEMENTS</p></div>
+        <div class="circle"><span>100</span><p>FUNCTIONS</p></div>
+        <div class="circle"><span>100</span><p>BRANCHES</p></div>
+      </div>
+    </section>
+
+    <section id="codePreview" class="hidden">
+      <h2>Simulated EA Code</h2>
+      <pre><code id="codeBlock"></code></pre>
+    </section>
+
+    <section id="issues" class="hidden">
+      <h2>Detected Issues</h2>
+      <ul id="issueList"></ul>
+      <button id="downloadBtn">Download Analysis as HTML</button>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
